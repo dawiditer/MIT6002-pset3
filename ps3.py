@@ -527,6 +527,71 @@ class FaultyRobot(Robot):
 #test_robot_movement(FaultyRobot, EmptyRoom)
 
 # === Problem 5
+def run_trial(num_robots, speed, capacity, width, height, dirt_amount, min_coverage, robot_type):
+    """Assumes min_coverage <= 1.0"""    
+    room = EmptyRoom(width, height,dirt_amount)
+    
+    #create the robots and put them randomly in the room
+    robots = list()
+    for num in range(num_robots):#different objects of a similar robot
+        robot = robot_type(room, speed, capacity)#each object randomly placed by constructor
+        robots.append(robot)#All robots are sharing the same mutable type; room
+        
+    #how many tiles in total must we clean to get min_coverage?
+    num_tiles_to_clean = math.ceil(min_coverage * room.get_num_tiles())#can't clean half a tile, must clean all of it
+    
+    assert num_tiles_to_clean <= room.get_num_tiles()
+    assert num_tiles_to_clean/room.get_num_tiles() >= min_coverage
+
+    #To simulate multiple robots cleaning at the same time,
+    #every robot performs an operation before advancing to the next time-step.
+    num_iters = 0
+    
+    while num_tiles_to_clean > room.get_num_cleaned_tiles():
+        robot = robots[num_iters%len(robots)]#continue to a new time step after complete iteration
+        robot.update_position_and_clean()        
+        num_iters += 1
+        
+    num_timesteps = math.ceil(num_iters/float(len(robots)))#no half-steps
+    return num_timesteps
+  
+             
+##def _run_trial_with_drawing(num_robots, speed, capacity, width, height, dirt_amount, min_coverage, robot_type):
+##    """Assumes min_coverage <= 1.0"""
+##    anim = ps3_visualize.RobotVisualization(num_robots, width, height, False)    
+##    room = EmptyRoom(width, height,dirt_amount)
+##    
+##    robots = list()
+##    for num in range(num_robots):
+##        robot = robot_type(room, speed, capacity)
+##        robots.append(robot)
+##        
+##    num_tiles_to_clean = math.ceil(min_coverage * room.get_num_tiles())
+##    
+##    assert num_tiles_to_clean <= room.get_num_tiles()
+##    assert num_tiles_to_clean/room.get_num_tiles() >= min_coverage
+##
+##    num_iters = 0
+##    which_timestep = None
+##    while num_tiles_to_clean > room.get_num_cleaned_tiles():
+##        robot = robots[num_iters%len(robots)]
+##
+##        if which_timestep == None or which_timestep < num_iters//len(robots):
+##            anim.update(room, robots)
+##            which_timestep = num_iters//len(robots)
+##                 
+##        robot.update_position_and_clean()        
+##        num_iters += 1
+##        
+##    num_timesteps = math.ceil(num_iters/float(len(robots)))
+##    
+##    anim.update(room, robots)
+##    anim.done()
+##    return num_timesteps
+##
+##print(_run_trial_with_drawing(5, 1, 1, 7, 5, 15, 1, StandardRobot))
+        
+
 def run_simulation(num_robots, speed, capacity, width, height, dirt_amount, min_coverage, num_trials,
                   robot_type):
     """
@@ -548,14 +613,22 @@ def run_simulation(num_robots, speed, capacity, width, height, dirt_amount, min_
     robot_type: class of robot to be instantiated (e.g. StandardRobot or
                 FaultyRobot)
     """
-    raise NotImplementedError
+    total_timesteps = 0
+
+    for trial in range(num_trials):
+        timestep = run_trial(num_robots, speed, capacity, width,
+                             height, dirt_amount, min_coverage, robot_type)
+        
+        total_timesteps += timestep
+        
+    return total_timesteps/num_trials
 
 
-# print ('avg time steps: ' + str(run_simulation(1, 1.0, 1, 5, 5, 3, 1.0, 50, StandardRobot)))
-# print ('avg time steps: ' + str(run_simulation(1, 1.0, 1, 10, 10, 3, 0.8, 50, StandardRobot)))
+##print ('avg time steps: ' + str(run_simulation(1, 1.0, 1, 5, 5, 3, 1.0, 50, StandardRobot)))
+##print ('avg time steps: ' + str(run_simulation(1, 1.0, 1, 10, 10, 3, 0.8, 50, StandardRobot)))
 # print ('avg time steps: ' + str(run_simulation(1, 1.0, 1, 10, 10, 3, 0.9, 50, StandardRobot)))
-# print ('avg time steps: ' + str(run_simulation(1, 1.0, 1, 20, 20, 3, 0.5, 50, StandardRobot)))
-# print ('avg time steps: ' + str(run_simulation(3, 1.0, 1, 20, 20, 3, 0.5, 50, StandardRobot)))
+##print ('avg time steps: ' + str(run_simulation(1, 1.0, 1, 20, 20, 3, 0.5, 50, StandardRobot)))
+##print ('avg time steps: ' + str(run_simulation(3, 1.0, 1, 20, 20, 3, 0.5, 50, StandardRobot)))
 
 # === Problem 6
 #
