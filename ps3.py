@@ -306,7 +306,7 @@ class EmptyRoom(RectangularRoom):
         """
         Returns: an integer; the total number of tiles in the room
         """
-        raise NotImplementedError
+        return len(self._room)
         
     def is_position_valid(self, pos):
         """
@@ -314,13 +314,24 @@ class EmptyRoom(RectangularRoom):
         
         Returns: True if pos is in the room, False otherwise.
         """
-        raise NotImplementedError
+        return self.is_position_in_room(pos)
         
     def get_random_position(self):
         """
         Returns: a Position object; a valid random position (inside the room).
         """
-        raise NotImplementedError
+        #generate a random position such that 0 <= pos_x < w and 0 <= pos_y <= h
+        x_max = self._width
+        y_max = self._height
+
+        pos_x = round(random.uniform(0, x_max), 2) % x_max#self._width is invalid
+        pos_y = round(random.uniform(0, y_max), 2) % y_max#self._height is invalid
+
+        random_pos = Position(pos_x,pos_y)
+        
+        assert self.is_position_in_room(random_pos) 
+
+        return random_pos
 
 class FurnishedRoom(RectangularRoom):
     """
@@ -351,12 +362,12 @@ class FurnishedRoom(RectangularRoom):
         furniture lies in the room.
         """
         # This addFurnitureToRoom method is implemented for you. Do not change it.
-        furniture_width = random.randint(1, self.width - 1)
-        furniture_height = random.randint(1, self.height - 1)
+        furniture_width = random.randint(1, self._width - 1)
+        furniture_height = random.randint(1, self._height - 1)
 
         # Randomly choose bottom left corner of the furniture item.    
-        f_bottom_left_x = random.randint(0, self.width - furniture_width)
-        f_bottom_left_y = random.randint(0, self.height - furniture_height)
+        f_bottom_left_x = random.randint(0, self._width - furniture_width)
+        f_bottom_left_y = random.randint(0, self._height - furniture_height)
 
         # Fill list with tuples of furniture tiles.
         for i in range(f_bottom_left_x, f_bottom_left_x + furniture_width):
@@ -367,7 +378,7 @@ class FurnishedRoom(RectangularRoom):
         """
         Return True if tile (m, n) is furnished.
         """
-        raise NotImplementedError
+        return (m, n) in self.furniture_tiles
         
     def is_position_furnished(self, pos):
         """
@@ -375,7 +386,12 @@ class FurnishedRoom(RectangularRoom):
 
         Returns True if pos is furnished and False otherwise
         """
-        raise NotImplementedError
+        pos_x = pos.get_x()
+        pos_y = pos.get_y()
+        
+        tile_x, tile_y = RectangularRoom._get_tile_at_pos(pos_x, pos_y)
+
+        return self.is_tile_furnished(tile_x, tile_y)
         
     def is_position_valid(self, pos):
         """
@@ -383,19 +399,36 @@ class FurnishedRoom(RectangularRoom):
         
         returns: True if pos is in the room and is unfurnished, False otherwise.
         """
-        raise NotImplementedError
+        return self.is_position_in_room(pos) and not self.is_position_furnished(pos)
         
     def get_num_tiles(self):
         """
         Returns: an integer; the total number of tiles in the room that can be accessed.
         """
-        raise NotImplementedError
+        #tiles in the room can't be accessed if furnished. 
+        total_num_tiles = self._width * self._height
+        num_furnished_tiles = len(self.furniture_tiles)
+
+        assert total_num_tiles >= num_furnished_tiles
         
+        return total_num_tiles - num_furnished_tiles
+    
     def get_random_position(self):
         """
         Returns: a Position object; a valid random position (inside the room and not in a furnished area).
         """
-        raise NotImplementedError
+        #idea 1: generate a list of valid positions by taking away invalid positions
+        ## random tile in self._room not in self.furnished
+        unfurnished_tiles = [tile for tile in self._room.keys() if tile not in self.furniture_tiles]
+
+        random_tile = random.choice(unfurnished_tiles)
+        assert random_tile not in self.furniture_tiles
+        
+        pos_x, pos_y = random_tile
+        random_pos = Position(pos_x, pos_y)        
+        assert self.is_position_in_room(random_pos)
+
+        return random_pos
 
 # === Problem 3
 class StandardRobot(Robot):
