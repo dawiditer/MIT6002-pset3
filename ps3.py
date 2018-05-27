@@ -96,22 +96,18 @@ class RectangularRoom(object):
         The first tile (0,0) is on the bottom left while the last tile is
         (width-1, height-1) on the top right
         """
-        tiles = [(x,y) for x in range(width) for y in range(height)]#remember x is width, y is height
+        tiles = [(x,y) for x in range(width) for y in range(height)]
         room = dict()
         for tile in tiles:
             room[tile] = dirt_amount
             
         return room
+    
     def _get_tile_at_pos(m, n):
         """
         Returns the tile where point (m,n) lies
         """
         return math.floor(m), math.floor(n)
-        #watch out for semantic errors here:
-        # tiles are indexed from (0,0) to (w-1, h-1).
-        # Positions are also indexed this way, so
-        # Position(w, h) is not considered part of this
-        # room.
 
     def clean_tile_at_position(self, pos, capacity):
         """
@@ -168,13 +164,10 @@ class RectangularRoom(object):
         pos: a Position object.
         Returns: True if pos is in the room, False otherwise.
         """
-        x_max = self._width - 1
-        y_max = self._height - 1
-
         pos_x = pos.get_x()
         pos_y = pos.get_y()
         
-        return 0 <= pos_x <= x_max and 0 <= pos_y <= y_max
+        return 0 <= pos_x < self._width and 0 <= pos_y < self._height#should the self._width be in the room?
         
     def get_dirt_amount(self, m, n):
         """
