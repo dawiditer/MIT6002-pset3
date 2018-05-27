@@ -81,8 +81,38 @@ class RectangularRoom(object):
         height: an integer > 0
         dirt_amount: an integer >= 0
         """
-        raise NotImplementedError
-    
+        self._width = width
+        self._height = height
+        self._num_clean_tiles = 0 if dirt_amount else width*height#all tiles clean if dirt_amount=0
+        self._room = RectangularRoom._create_room(width, height, dirt_amount)
+
+    def _create_room(width, height, dirt_amount):
+        """
+        Creates a room as a dictionary of key:tiles to value:dirt_amount.
+        Each tile is of size 1.
+        The width is represented as the x-axis from the origin going right
+        while the height as the y-axis from the origin going up.
+
+        The first tile (0,0) is on the bottom left while the last tile is
+        (width-1, height-1) on the top right
+        """
+        tiles = [(x,y) for x in range(width) for y in range(height)]#remember x is width, y is height
+        room = dict()
+        for tile in tiles:
+            room[tile] = dirt_amount
+            
+        return room
+    def _get_tile_at_pos(m, n):
+        """
+        Returns the tile where point (m,n) lies
+        """
+        return math.floor(m), math.floor(n)
+        #watch out for semantic errors here:
+        # tiles are indexed from (0,0) to (w-1, h-1).
+        # Positions are also indexed this way, so
+        # Position(w, h) is not considered part of this
+        # room.
+
     def clean_tile_at_position(self, pos, capacity):
         """
         Mark the tile under the position pos as cleaned by capacity amount of dirt.
@@ -96,7 +126,16 @@ class RectangularRoom(object):
         Note: The amount of dirt on each tile should be NON-NEGATIVE.
               If the capacity exceeds the amount of dirt on the tile, mark it as 0.
         """
-        raise NotImplementedError
+        x = pos.get_x()
+        y = pos.get_y()
+
+        tile = RectangularRoom._get_tile_at_pos(x, y)
+
+        if self._room[tile]:
+            self._room[tile] = max(0, self._room[tile] - capacity)
+
+            if not self._room[tile]:
+                self._num_clean_tiles += 1
 
     def is_tile_cleaned(self, m, n):
         """
@@ -112,13 +151,15 @@ class RectangularRoom(object):
         Note: The tile is considered clean only when the amount of dirt on this
               tile is 0.
         """
-        raise NotImplementedError
+        tile = RectangularRoom._get_tile_at_pos(m, n)
+
+        return not bool(self._room[tile])
 
     def get_num_cleaned_tiles(self):
         """
         Returns: an integer; the total number of clean tiles in the room
         """
-        raise NotImplementedError
+        return self._num_clean_tiles
         
     def is_position_in_room(self, pos):
         """
@@ -127,7 +168,13 @@ class RectangularRoom(object):
         pos: a Position object.
         Returns: True if pos is in the room, False otherwise.
         """
-        raise NotImplementedError
+        x_max = self._width - 1
+        y_max = self._height - 1
+
+        pos_x = pos.get_x()
+        pos_y = pos.get_y()
+        
+        return 0 <= pos_x <= x_max and 0 <= pos_y <= y_max
         
     def get_dirt_amount(self, m, n):
         """
@@ -140,7 +187,9 @@ class RectangularRoom(object):
 
         Returns: an integer
         """
-        raise NotImplementedError
+        tile = RectangularRoom._get_tile_at_pos(m, n)
+
+        return self._room[tile]
         
     def get_num_tiles(self):
         """
@@ -188,28 +237,48 @@ class Robot(object):
         capacity: a positive interger; the amount of dirt cleaned by the robot 
                   in a single time-step
         """
-        raise NotImplementedError
-
+        self._room = room
+        self._speed = speed
+        self._capacity = capacity
+        
+        self._position = room.get_random_position()
+        self._direction = round(random.uniform(0, 360), 2) % 360#watch this space
+        #360 may be included where:
+        #  - 359.999 is rounded off to 360.0 or,
+        #  - random.uniform(0,360) including it in its range
+        #    (according to the documentation).
+        #
+        #Position's get_new_position() has a precondition that:
+        #   0 <= angle < 360.0
+        #random_float % 360 makes sure we don't violate this spec
+        
+        
     def get_robot_position(self):
         """
         Returns: a Position object giving the robot's position in the room.
         """
-        raise NotImplementedError
+        return self._position
 
     def get_robot_direction(self):
         """
         Returns: a float d giving the direction of the robot as an angle in
         degrees, 0.0 <= d < 360.0.
         """
-        raise NotImplementedError
+        return self._direction
 
     def set_robot_position(self, position):
         """
         Set the position of the robot to position.
 
         position: a Position object.
+
+        raise: ValueError if position not in room
         """
-        raise NotImplementedError
+        if not self._room.is_position_in_room(position):
+            raise ValueError("position not in room")
+        
+        self._position = position
+        
 
     def set_robot_direction(self, direction):
         """
@@ -217,8 +286,13 @@ class Robot(object):
 
         direction: float representing an angle in degrees
         """
-        raise NotImplementedError
-
+        self._direction = direction % 360#takes care of -ve values as anticlockwise
+        #For example:
+        # -20 means move 20 degrees anticlockwise from North which is moving
+        # clockwise 340 degrees.
+        #
+        # -20 % 360 == 340 == -380 % 360
+        
     def update_position_and_clean(self):
         """
         Simulate the raise passage of a single time-step.
