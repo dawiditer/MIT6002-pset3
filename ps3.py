@@ -636,12 +636,17 @@ def run_simulation(num_robots, speed, capacity, width, height, dirt_amount, min_
 #
 # 1)How does the performance of the two robot types compare when cleaning 80%
 #       of a 20x20 room?
-#
+#  answer: StandardRobot cleans the room in less time steps than FaultyRobot but the
+#          difference in performance decreases as the number of robots in the room increase
 #
 # 2) How does the performance of the two robot types compare when two of each
 #       robot cleans 80% of rooms with dimensions 
 #       10x30, 20x15, 25x12, and 50x6?
-#
+#  answer: as the aspect ratio grows from 0 to 1, the time taken decreases for both robots.
+#          Time taken decreases more rapidly in a faulty robot than the standard robot.
+#        : as the aspect ratio grows from 1, time taken by either robots increases,
+#          where the rate of increase in time taken by a faulty robot is higher than that
+#          of the standard
 #
 
 def show_plot_compare_strategies(title, x_label, y_label):
