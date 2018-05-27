@@ -96,7 +96,7 @@ class RectangularRoom(object):
         The first tile (0,0) is on the bottom left while the last tile is
         (width-1, height-1) on the top right
         """
-        tiles = [(x,y) for x in range(width) for y in range(height)]
+        tiles = [(x,y) for x in range(int(width)) for y in range(int(height))]
         room = dict()
         for tile in tiles:
             room[tile] = dirt_amount
@@ -686,5 +686,5 @@ def show_plot_room_shape(title, x_label, y_label):
     pylab.show()
 
 
-#show_plot_compare_strategies('Time to clean 80% of a 20x20 room, for various numbers of robots','Number of robots','Time / steps')
-#show_plot_room_shape('Time to clean 80% of a 300-tile room for various room shapes','Aspect Ratio', 'Time / steps')
+##show_plot_compare_strategies('Time to clean 80% of a 20x20 room, for various numbers of robots','Number of robots','Time / steps')
+##show_plot_room_shape('Time to clean 80% of a 300-tile room for various room shapes','Aspect Ratio', 'Time / steps')
