@@ -235,7 +235,16 @@ class Robot(object):
         self._capacity = capacity
         
         self._position = room.get_random_position()
-        self._direction = round(random.uniform(0, 360), 2) % 360#watch this space
+        self._direction = Robot._get_random_direction()
+        
+    def _get_random_direction():
+        """
+        Generates a random direction d from the North such that:
+            0 <= d < 360
+        Negative values are treated as anticlockwise movmements
+        and the equivalent colckwise direction is returned
+        """
+        return round(random.uniform(0, 360), 2) % 360#watch this space
         #360 may be included where:
         #  - 359.999 is rounded off to 360.0 or,
         #  - random.uniform(0,360) including it in its range
@@ -243,7 +252,7 @@ class Robot(object):
         #
         #Position's get_new_position() has a precondition that:
         #   0 <= angle < 360.0
-        #random_float % 360 makes sure we don't violate this spec
+        #random_float % 360 makes sure we don't violate this spec 
         
         
     def get_robot_position(self):
@@ -447,11 +456,22 @@ class StandardRobot(Robot):
         rotate once to a random new direction, and stay stationary) and clean the dirt on the tile
         by its given capacity. 
         """
-        raise NotImplementedError
+        current_pos = self._position
+        current_dir = self._direction
+
+        new_pos = current_pos.get_new_position(current_dir, self._speed)
+
+        if self._room.is_position_valid(new_pos):
+            self.set_robot_position(new_pos)
+            self._room.clean_tile_at_position(new_pos, self._capacity)
+            
+        else:
+            random_dir = Robot._get_random_direction()
+            self.set_robot_direction(random_dir)
 
 # Uncomment this line to see your implementation of StandardRobot in action!
-#test_robot_movement(StandardRobot, EmptyRoom)
-#test_robot_movement(StandardRobot, FurnishedRoom)
+##test_robot_movement(StandardRobot, EmptyRoom)
+##test_robot_movement(StandardRobot, FurnishedRoom)
 
 # === Problem 4
 class FaultyRobot(Robot):
